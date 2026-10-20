@@ -12,6 +12,7 @@ The examples use the retail dataset columns from the learning exercises.
 
 from pathlib import Path
 from typing import Iterable
+from collections.abc import Iterable
 
 import matplotlib.pyplot as plt
 import numpy as np
