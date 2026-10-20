@@ -39,7 +39,7 @@ sns.set_theme(style="whitegrid", palette="deep")
 # 1. DATA INGESTION AND INSPECTION
 # ---------------------------------------------------------------------------
 
-def load_data(file_path: str | Path) -> pd.DataFrame:
+def load_data(file_path: str or Path) -> pd.DataFrame:
     """Load a CSV and parse the transaction date when available."""
     df = pd.read_csv(file_path)
     if "transaction_date" in df.columns:
@@ -252,7 +252,7 @@ def merge_examples(
 # 3. NUMPY: ARRAYS, VECTORIZATION, AND RANDOM SAMPLING
 # ---------------------------------------------------------------------------
 
-def numpy_summary(values: pd.Series | np.ndarray) -> dict[str, float | int]:
+def numpy_summary(values: pd.Series or np.ndarray) -> dict[str, float | int]:
     """Calculate core numerical summaries while ignoring missing values."""
     array = np.asarray(values, dtype=float)
     array = array[np.isfinite(array)]
@@ -274,7 +274,7 @@ def numpy_summary(values: pd.Series | np.ndarray) -> dict[str, float | int]:
 
 
 def revenue_scenarios(
-    revenue: pd.Series | np.ndarray,
+    revenue: pd.Series or np.ndarray,
     adjustment_rates: Iterable[float] = (0.05, 0.10, 0.15),
 ) -> np.ndarray:
     """Use broadcasting to model multiple revenue-adjustment scenarios."""
@@ -483,7 +483,7 @@ def daily_metric(
 ) -> pd.DataFrame:
     """Aggregate a numeric metric by day and calculate trend features."""
     data = df[[date_column, value_column]].copy()
-    data[date_column] = pd.to_datetime(data[date_column], errors="coerce")
+    data[date_column] = pd.to_datetime(data[date_column], errors="coerce").dt.normalize()
     data[value_column] = pd.to_numeric(data[value_column], errors="coerce")
     data = data.dropna(subset=[date_column])
 
@@ -491,7 +491,6 @@ def daily_metric(
         data.groupby(date_column)[value_column]
         .sum(min_count=1)
         .sort_index()
-        .asfreq("D")
     )
     daily = daily.fillna(0).rename("daily_value").to_frame()
     daily["cumulative_total"] = daily["daily_value"].cumsum()
