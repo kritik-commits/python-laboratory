@@ -86,6 +86,8 @@ print("Eta-squared: measures the proportion of outcome variability explained by 
 print("Multiple testing: performing several tests, which increases the risk of false positives.")
 print("Bonferroni correction: reduces the significance threshold to account for multiple tests.")
 
+
+
 # ============================================================================
 # TEST 1 — ONE-PROPORTION Z-TEST
 # ============================================================================
@@ -170,6 +172,11 @@ if p_value < alpha:
     print("Reject H0: the conversion rate is statistically significantly above 5%.")
 else:
     print("Fail to reject H0: evidence is insufficient to conclude the rate exceeds 5%.")
+
+
+
+
+
 
 # ============================================================================
 # TEST 2 — TWO-PROPORTION Z-TEST
@@ -267,6 +274,10 @@ if p_value < alpha:
 else:
     print("Fail to reject H0: evidence is insufficient to establish a conversion-rate difference.")
 
+
+
+
+
 # ============================================================================
 # TEST 3 — ONE-SAMPLE T-TEST
 # ============================================================================
@@ -356,6 +367,10 @@ if p_value < alpha:
     print("Reject H0: the population mean AOV differs significantly from ₹800.")
 else:
     print("Fail to reject H0: evidence is insufficient to establish a difference from ₹800.")
+
+
+
+
 
 # ============================================================================
 # TEST 4 — INDEPENDENT TWO-SAMPLE WELCH T-TEST
@@ -447,6 +462,11 @@ if p_value < alpha:
 else:
     print("Fail to reject H0: evidence is insufficient to establish a mean difference.")
 
+
+
+
+
+
 # ============================================================================
 # TEST 5 — PAIRED T-TEST
 # ============================================================================
@@ -532,6 +552,141 @@ else:
     print("Fail to reject H0: evidence is insufficient to establish an average change.")
 
 print("\nEND OF FIVE-TEST PLAYBOOK")
+
+
+
+
+
+
+# ============================================================================
+# TEST 6 — CHI-SQUARE TEST OF INDEPENDENCE
+# ============================================================================
+print("\n" + "=" * 72)
+print("TEST 6 — CHI-SQUARE TEST OF INDEPENDENCE")
+print("=" * 72)
+
+# 1. BUSINESS PROBLEM
+print("\n1. BUSINESS PROBLEM")
+print("Check whether device type and purchase completion are associated.")
+print("Rows are device groups; columns are purchased and did not purchase.")
+observed_table = np.array([[120, 880], [90, 910], [150, 850]], dtype=int)
+row_labels = ["Mobile", "Desktop", "Tablet"]
+column_labels = ["Purchased", "Did not purchase"]
+
+# 2. HYPOTHESES
+print("\n2. HYPOTHESES")
+print("H0: device type and purchase completion are independent.")
+print("H1: device type and purchase completion are associated.")
+print(f"Alpha: {alpha:.2f}")
+
+# 3. ASSUMPTIONS AND LIMITATIONS
+print("\n3. ASSUMPTIONS AND LIMITATIONS")
+print("- Each observation belongs to exactly one cell in the contingency table.")
+print("- Observations are independent; repeated users require a different design.")
+print("- Expected cell counts should generally be at least 5.")
+print("- Association does not prove that device type causes purchasing behavior.")
+
+# 4. DATA VALIDATION
+print("\n4. DATA VALIDATION")
+assert observed_table.ndim == 2 and observed_table.shape == (3, 2)
+assert np.issubdtype(observed_table.dtype, np.integer)
+assert (observed_table >= 0).all() and observed_table.sum() > 0
+print(f"Validated contingency table: {observed_table.sum()} observations across 6 cells.")
+
+# 5. TEST, P-VALUE, CONFIDENCE INTERVAL / EFFECT SIZE
+print("\n5. TEST CALCULATIONS AND INTERPRETATION")
+chi2_statistic, p_value, degrees_freedom, expected_table = chi2_contingency(
+    observed_table, correction=False
+)
+critical_value = chi2.ppf(1 - alpha, df=degrees_freedom)
+minimum_expected = expected_table.min()
+cramers_v = np.sqrt(chi2_statistic / (observed_table.sum() * min(observed_table.shape[0] - 1,
+                                                                  observed_table.shape[1] - 1)))
+print("Observed counts:")
+print(pd.DataFrame(observed_table, index=row_labels, columns=column_labels).to_string())
+print("Expected counts under H0:")
+print(pd.DataFrame(expected_table, index=row_labels, columns=column_labels).round(2).to_string())
+print(f"Chi-square statistic: {chi2_statistic:.4f}; df: {degrees_freedom}")
+print(f"Critical chi-square: {critical_value:.4f}; p-value: {p_value:.8f}")
+print(f"Minimum expected cell count: {minimum_expected:.2f}")
+print(f"Cramer's V effect size: {cramers_v:.4f}")
+print("A single mean-difference confidence interval is not defined for this association test.")
+print("Use cell proportions and their intervals to quantify specific group differences.")
+
+# 6. POWER AND MDE — chi-square approximation
+print("\n6. STATISTICAL POWER AND MDE")
+planning_effect_size = 0.10  # Cohen's w, illustrative association effect
+power_model = GofChisquarePower()
+power = power_model.power(effect_size=planning_effect_size, nobs=observed_table.sum(),
+                          alpha=alpha, n_bins=observed_table.size - 1)
+mde_effect_size = power_model.solve_power(effect_size=None, nobs=observed_table.sum(),
+                                          alpha=alpha, power=target_power,
+                                          n_bins=observed_table.size - 1)
+print(f"Planning effect size (Cohen's w): {planning_effect_size:.2f}")
+print(f"Approximate power for planned effect: {power:.1%}")
+print(f"Approximate MDE at {target_power:.0%} power: Cohen's w = {mde_effect_size:.3f}")
+print("Planning power is approximate; contingency-table geometry affects the result.")
+
+# 7. DECISION
+print("\n7. STATISTICAL DECISION")
+if minimum_expected < 5:
+    print("Warning: some expected counts are below 5; consider an exact or simulation-based method.")
+if p_value < alpha:
+    print("Reject H0: evidence indicates an association between device and purchase completion.")
+else:
+    print("Fail to reject H0: evidence is insufficient to establish an association.")
+
+
+
+
+
+
+# ============================================================================
+# TEST 7 — CHI-SQUARE GOODNESS-OF-FIT TEST
+# ============================================================================
+print("\n" + "=" * 72)
+print("TEST 7 — CHI-SQUARE GOODNESS-OF-FIT TEST")
+print("=" * 72)
+
+# 1. BUSINESS PROBLEM
+print("\n1. BUSINESS PROBLEM")
+print("Check whether four equally promoted campaign variants receive equal clicks.")
+observed_counts = np.array([120, 95, 105, 80], dtype=int)
+expected_probabilities = np.array([0.25, 0.25, 0.25, 0.25], dtype=float)
+
+# 2. HYPOTHESES
+print("\n2. HYPOTHESES")
+print("H0: category probabilities match the prespecified expected proportions.")
+print("H1: at least one category probability differs from its expected proportion.")
+print(f"Alpha: {alpha:.2f}")
+
+# 3. ASSUMPTIONS AND LIMITATIONS
+print("\n3. ASSUMPTIONS AND LIMITATIONS")
+print("- Categories are mutually exclusive and cover all observations.")
+print("- Observations are independent and expected counts are sufficiently large.")
+print("- Expected probabilities must be specified independently of observed counts.")
+print("- The omnibus test does not identify which category differs by itself.")
+
+# 4. DATA VALIDATION
+print("\n4. DATA VALIDATION")
+assert observed_counts.ndim == 1 and len(observed_counts) >= 2
+assert np.issubdtype(observed_counts.dtype, np.integer)
+assert (observed_counts >= 0).all() and observed_counts.sum() > 0
+assert len(expected_probabilities) == len(observed_counts)
+assert (expected_probabilities > 0).all()
+assert np.isclose(expected_probabilities.sum(), 1.0)
+expected_counts = observed_counts.sum() * expected_probabilities
+assert (expected_counts >= 5).all(), "Expected counts below 5; consider an exact/Monte Carlo approach."
+print(f"Validated {observed_counts.sum()} observations across {len(observed_counts)} categories.")
+
+# 5. TEST, P-VALUE, CONFIDENCE INTERVAL / EFFECT SIZE
+print("\n5. TEST CALCULATIONS AND INTERPRETATION")
+chi2_statistic, p_value = chisquare(f_obs=observed_counts, f_exp=expected_counts)
+degrees_freedom = len(observed_counts) - 1
+critical_value = chi2.ppf(1 - alpha, df=degrees_freedom)
+cohens_w = np.sqrt(chi2_statistic / observed_counts.sum())
+print(f"Observed counts: {observed_counts.tolist()}")
+print(f"Expected counts: {expected_counts.round(2).tolist()}")
 print(f"Chi-square statistic: {chi2_statistic:.4f}; df: {degrees_freedom}")
 print(f"Critical chi-square: {critical_value:.4f}; p-value: {p_value:.8f}")
 print(f"Cohen's w effect size: {cohens_w:.4f}")
@@ -558,6 +713,11 @@ if p_value < alpha:
     print("Reject H0: observed category frequencies differ from the expected distribution.")
 else:
     print("Fail to reject H0: evidence is insufficient to establish a distribution mismatch.")
+
+
+
+
+
 
 # ============================================================================
 # TEST 8 — FISHER'S EXACT TEST
@@ -627,6 +787,11 @@ if p_value < alpha:
     print("Reject H0: evidence indicates an association between page and purchase outcome.")
 else:
     print("Fail to reject H0: evidence is insufficient to establish an association.")
+
+
+
+
+
 
 # ============================================================================
 # TEST 9 — ONE-WAY ANOVA
@@ -717,5 +882,7 @@ else:
     print("Fail to reject H0: evidence is insufficient to establish a mean difference.")
 
 print("\nEND OF NINE-TEST PLAYBOOK")
+
+
 # ============================================================================
 # ============================================================================
