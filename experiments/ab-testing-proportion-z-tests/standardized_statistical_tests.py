@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
-"""Five statistical tests in the sequential, inline style of Untitled.py.
+"""
+Nine statistical tests in the sequential, inline style of ab_test_kritik.py.
 All datasets and planning assumptions are illustrative, not company records.
 Dependencies: numpy, pandas, scipy, statsmodels.
 """
@@ -22,16 +23,20 @@ print("Null hypothesis (H0): the default claim tested using sample data.")
 print("Alternative hypothesis (H1): the effect or difference being investigated.")
 print("Type I error - false positive: rejecting a true null hypothesis.")
 print("Type II error - false negative: failing to reject a false null hypothesis.")
+
 print("Alpha: the maximum acceptable Type I error rate, commonly 5%.")
 print("Beta: the probability of making a Type II error.")
+
 print("Mean: the arithmetic average of observed values.")
 print("Median: the middle value when observations are arranged in order.")
 print("Mode: the most frequently occurring value in a dataset.")
+
 print("Range: the difference between the maximum and minimum values.")
 print("IQR: the difference between the 75th and 25th percentiles.")
 print("Variance: the average squared deviation from the mean; sample variance uses (n-1) in the denominator.")
 print("Standard deviation: the typical spread around the mean, measured in the original data units.")
 print("Standard error: measures sampling uncertainty, often calculated by dividing standard deviation by the square root of sample size.")
+
 print("Central Limit Theorem (CLT): the sample mean's distribution approaches normality as sample size increases, under suitable conditions.")
 print("Test statistic: a value summarizing the sample evidence against the null hypothesis.")
 print("Degrees of freedom: determines the t-distribution's shape; the standard normal (z) distribution requires none.")
@@ -39,10 +44,12 @@ print("P-value: assuming H0 is true, the probability of getting a result this ex
 print("Critical value: the test-statistic cutoff that defines the rejection region.")
 print("Confidence interval: a range of plausible values for a population parameter.")
 print("95% confidence interval: across repeated samples, approximately 95% of calculated intervals contain the true population parameter.")
+
 print("Effect size: measures the magnitude of an observed or planned difference.")
 print("Power (1 - beta): the probability of rejecting H0 when a specified alternative is true.")
 print("MDE: the smallest effect detectable at a chosen significance level and target power.")
 print("Fail to reject H0: does not prove that H0 is true.")
+
 print("Statistical significance: evidence against H0 strong enough to cross the chosen significance threshold.")
 print("Practical significance: whether an effect is large enough to matter in practice.")
 print("Probability: the likelihood of an event occurring.")
@@ -50,22 +57,32 @@ print("Probability Mass Function (PMF): gives probabilities for possible values 
 print("Probability Density Function (PDF): describes a continuous distribution; probabilities come from areas over intervals.")
 print("Cumulative Distribution Function (CDF): gives the probability that a random variable is at most a specified value.")
 
-print("\\nSTATISTICAL TESTS — ONE-LINE DEFINITIONS")
+print("\nSTATISTICAL TESTS — ONE-LINE DEFINITIONS\n")
 
+print("DIRECTIONAL TESTS")
 print("One-sided test: tests for an effect in one specified direction.")
-print("Two-sided test: tests for an effect in either direction.")
+print("Two-sided test: tests for an effect in either direction.\n")
+
+print("TESTS FOR PROPORTIONS")
 print("One-proportion z-test: tests whether a population proportion differs from a specified value.")
-print("Two-proportion z-test: tests whether two independent population proportions differ.")
+print("Two-proportion z-test: tests whether two independent population proportions differ.\n")
+
+print("TESTS FOR NUMERICAL DATA")
 print("One-sample t-test: tests whether a population mean differs from a specified value.")
 print("Independent two-sample t-test: compares the means of two independent groups.")
 print("Welch's t-test: compares two independent means without assuming equal population variances.")
-print("Paired t-test: tests the mean difference between matched or repeated measurements.")
+print("Paired t-test: tests the mean difference between matched or repeated measurements.\n")
+
+print("TESTS FOR CATEGORICAL DATA")
 print("Chi-square test of independence: tests whether two categorical variables are associated.")
 print("Chi-square goodness-of-fit test: tests whether observed category counts match expected proportions.")
-print("Fisher's exact test: tests the association between two categorical variables, often with small sample counts.")
-print("One-way ANOVA: tests whether three or more independent group means differ.")
+print("Fisher's exact test: tests the association between two categorical variables, especially with small sample counts.\n")
+
+print("TEST FOR COMPARING MULTIPLE MEANS")
+print("One-way ANOVA: tests whether three or more independent group means differ.\n")
+
 print("Z-test: tests a mean or proportion using a standard normal reference distribution when its assumptions are satisfied.")
-print("T-test: tests mean differences using the t-distribution when population variability is estimated from sample data.")
+print("T-test: tests mean differences using the t-distribution when population variability is estimated from sample data. William Gosset!")
 
 print("\\nEXPERIMENT DESIGN — ONE-LINE DEFINITIONS")
 
