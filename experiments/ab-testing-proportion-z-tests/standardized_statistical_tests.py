@@ -7,8 +7,8 @@ Dependencies: numpy, pandas, scipy, statsmodels.
 
 import numpy as np
 import pandas as pd
-from scipy.stats import norm, t
-from statsmodels.stats.power import TTestPower, TTestIndPower, NormalIndPower
+from scipy.stats import norm, t, chi2, chi2_contingency, chisquare, fisher_exact, f_oneway, f
+from statsmodels.stats.power import TTestPower, TTestIndPower, NormalIndPower, GofChisquarePower, FTestAnovaPower
 from statsmodels.stats.proportion import proportion_effectsize
 
 alpha = 0.05
@@ -481,3 +481,190 @@ else:
     print("Fail to reject H0: evidence is insufficient to establish an average change.")
 
 print("\nEND OF FIVE-TEST PLAYBOOK")
+print(f"Chi-square statistic: {chi2_statistic:.4f}; df: {degrees_freedom}")
+print(f"Critical chi-square: {critical_value:.4f}; p-value: {p_value:.8f}")
+print(f"Cohen's w effect size: {cohens_w:.4f}")
+print("A single mean-difference confidence interval is not defined for this omnibus test.")
+print("Inspect category proportions and intervals if you need category-level estimates.")
+
+# 6. POWER AND MDE — chi-square approximation
+print("\n6. STATISTICAL POWER AND MDE")
+power_model = GofChisquarePower()
+planning_effect_size = 0.20
+power = power_model.power(effect_size=planning_effect_size, nobs=observed_counts.sum(),
+                          alpha=alpha, n_bins=len(observed_counts))
+mde_effect_size = power_model.solve_power(effect_size=None, nobs=observed_counts.sum(),
+                                          alpha=alpha, power=target_power,
+                                          n_bins=len(observed_counts))
+print(f"Planning effect size (Cohen's w): {planning_effect_size:.2f}")
+print(f"Approximate power for planned effect: {power:.1%}")
+print(f"Approximate MDE at {target_power:.0%} power: Cohen's w = {mde_effect_size:.3f}")
+print("Power estimates assume the specified category count and chi-square approximation.")
+
+# 7. DECISION
+print("\n7. STATISTICAL DECISION")
+if p_value < alpha:
+    print("Reject H0: observed category frequencies differ from the expected distribution.")
+else:
+    print("Fail to reject H0: evidence is insufficient to establish a distribution mismatch.")
+
+# ============================================================================
+# TEST 8 — FISHER'S EXACT TEST
+# ============================================================================
+print("\n" + "=" * 72)
+print("TEST 8 — FISHER'S EXACT TEST")
+print("=" * 72)
+
+# 1. BUSINESS PROBLEM
+print("\n1. BUSINESS PROBLEM")
+print("Compare purchase odds for two landing pages with small samples.")
+fisher_table = np.array([[8, 2], [1, 5]], dtype=int)
+
+# 2. HYPOTHESES
+print("\n2. HYPOTHESES")
+print("H0: the two categorical variables are independent; odds ratio = 1.")
+print("H1: the variables are associated; odds ratio differs from 1 (two-sided).")
+print(f"Alpha: {alpha:.2f}")
+
+# 3. ASSUMPTIONS AND LIMITATIONS
+print("\n3. ASSUMPTIONS AND LIMITATIONS")
+print("- Use a 2x2 table of independent observations and mutually exclusive outcomes.")
+print("- Fisher's exact test is useful when expected counts are small.")
+print("- The test conditions on observed row and column margins.")
+print("- Exact p-values can be conservative; small samples may have low power.")
+
+# 4. DATA VALIDATION
+print("\n4. DATA VALIDATION")
+assert fisher_table.shape == (2, 2)
+assert np.issubdtype(fisher_table.dtype, np.integer)
+assert (fisher_table >= 0).all() and fisher_table.sum() > 0
+assert (fisher_table.sum(axis=0) > 0).all() and (fisher_table.sum(axis=1) > 0).all()
+print(f"Validated 2x2 table with {fisher_table.sum()} observations.")
+
+# 5. TEST, P-VALUE, CONFIDENCE INTERVAL / EFFECT SIZE
+print("\n5. TEST CALCULATIONS AND INTERPRETATION")
+conditional_odds_ratio, p_value = fisher_exact(fisher_table, alternative="two-sided")
+# Sample odds ratio and Wald interval are descriptive approximations, not exact intervals.
+a, b, c, d = fisher_table.ravel()
+if min(a, b, c, d) > 0:
+    sample_odds_ratio = (a * d) / (b * c)
+    log_or_se = np.sqrt(1 / a + 1 / b + 1 / c + 1 / d)
+    z_ci = norm.ppf(1 - (1 - confidence_level) / 2)
+    or_ci_lower = np.exp(np.log(sample_odds_ratio) - z_ci * log_or_se)
+    or_ci_upper = np.exp(np.log(sample_odds_ratio) + z_ci * log_or_se)
+else:
+    sample_odds_ratio = np.inf if (a * d > b * c) else 0.0
+    or_ci_lower, or_ci_upper = np.nan, np.nan
+print(f"Sample odds ratio: {sample_odds_ratio:.4f}")
+print(f"Fisher exact two-sided p-value: {p_value:.8f}")
+if np.isfinite(or_ci_lower):
+    print(f"Approximate Wald 95% CI for odds ratio: {or_ci_lower:.3f} to {or_ci_upper:.3f}")
+else:
+    print("Wald odds-ratio interval unavailable with zero cells; use an exact interval method.")
+print("SciPy's reported conditional odds ratio and the sample cross-product ratio can differ.")
+print("The odds-ratio interval above is approximate, not a Fisher exact confidence interval.")
+
+# 6. POWER AND MDE
+print("\n6. STATISTICAL POWER AND MDE")
+print("Exact Fisher power/MDE requires specified margins and an alternative odds ratio.")
+print("Use design-specific exact enumeration or simulation for formal planning.")
+print("A chi-square approximation may be used for rough planning, not as exact Fisher power.")
+
+# 7. DECISION
+print("\n7. STATISTICAL DECISION")
+if p_value < alpha:
+    print("Reject H0: evidence indicates an association between page and purchase outcome.")
+else:
+    print("Fail to reject H0: evidence is insufficient to establish an association.")
+
+# ============================================================================
+# TEST 9 — ONE-WAY ANOVA
+# ============================================================================
+print("\n" + "=" * 72)
+print("TEST 9 — ONE-WAY ANOVA")
+print("=" * 72)
+
+# 1. BUSINESS PROBLEM
+print("\n1. BUSINESS PROBLEM")
+print("Compare mean order values across three independent pricing strategies.")
+price_a = np.array([780, 810, 790, 820, 805, 795, 815, 800], dtype=float)
+price_b = np.array([830, 850, 840, 860, 845, 855, 835, 865], dtype=float)
+price_c = np.array([800, 790, 810, 805, 795, 815, 785, 805], dtype=float)
+groups = [price_a, price_b, price_c]
+group_names = ["Strategy A", "Strategy B", "Strategy C"]
+
+# 2. HYPOTHESES
+print("\n2. HYPOTHESES")
+print("H0: all population mean order values are equal.")
+print("H1: at least one population mean differs.")
+print(f"Alpha: {alpha:.2f}")
+
+# 3. ASSUMPTIONS AND LIMITATIONS
+print("\n3. ASSUMPTIONS AND LIMITATIONS")
+print("- Outcome is continuous; groups are independent and observations are independent.")
+print("- Within-group residuals should be approximately normal, especially for small samples.")
+print("- Population variances should be reasonably similar for classical one-way ANOVA.")
+print("- A significant omnibus result does not identify which pairs differ.")
+print("- Use planned contrasts or multiplicity-adjusted post-hoc tests after an omnibus result.")
+
+# 4. DATA VALIDATION
+print("\n4. DATA VALIDATION")
+assert len(groups) >= 3
+assert all(group.ndim == 1 and len(group) >= 2 for group in groups)
+assert all(np.isfinite(group).all() for group in groups)
+print(f"Validated {len(groups)} groups and {sum(len(group) for group in groups)} observations.")
+for group_name, group in zip(group_names, groups):
+    print(f"{group_name}: n={len(group)}, mean=₹{group.mean():.2f}, SD=₹{group.std(ddof=1):.2f}")
+
+# 5. TEST, P-VALUE, CONFIDENCE INTERVAL / EFFECT SIZE
+print("\n5. TEST CALCULATIONS AND INTERPRETATION")
+f_statistic, p_value = f_oneway(*groups)
+all_values = np.concatenate(groups)
+number_groups = len(groups)
+total_n = len(all_values)
+degrees_freedom_between = number_groups - 1
+degrees_freedom_within = total_n - number_groups
+grand_mean = all_values.mean()
+ss_between = sum(len(group) * (group.mean() - grand_mean) ** 2 for group in groups)
+ss_within = sum(((group - group.mean()) ** 2).sum() for group in groups)
+ss_total = ss_between + ss_within
+ms_between = ss_between / degrees_freedom_between
+ms_within = ss_within / degrees_freedom_within
+critical_f = f.ppf(1 - alpha, degrees_freedom_between, degrees_freedom_within)
+eta_squared = ss_between / ss_total
+omega_squared = max(0.0, (ss_between - degrees_freedom_between * ms_within) /
+                    (ss_total + ms_within))
+print(f"Grand mean: ₹{grand_mean:.2f}")
+print(f"Between-group SS: {ss_between:.3f}; within-group SS: {ss_within:.3f}")
+print(f"MS between: {ms_between:.3f}; MS within: {ms_within:.3f}")
+print(f"F-statistic: {f_statistic:.4f}; df=({degrees_freedom_between}, {degrees_freedom_within})")
+print(f"Critical F: {critical_f:.4f}; p-value: {p_value:.8f}")
+print(f"Eta-squared: {eta_squared:.4f}; omega-squared estimate: {omega_squared:.4f}")
+print("ANOVA tests the omnibus mean difference; it does not provide one CI for all groups.")
+print("Use adjusted pairwise confidence intervals to locate and quantify group differences.")
+
+# 6. POWER AND MDE — Cohen's f planning approximation
+print("\n6. STATISTICAL POWER AND MDE")
+planning_cohens_f = 0.25
+power_model = FTestAnovaPower()
+power = power_model.power(effect_size=planning_cohens_f, nobs=total_n,
+                          alpha=alpha, k_groups=number_groups)
+mde_cohens_f = power_model.solve_power(effect_size=None, nobs=total_n,
+                                       alpha=alpha, power=target_power,
+                                       k_groups=number_groups)
+print(f"Planning effect size (Cohen's f): {planning_cohens_f:.2f}")
+print(f"Approximate power for planned effect: {power:.1%}")
+print(f"Approximate MDE at {target_power:.0%} power: Cohen's f = {mde_cohens_f:.3f}")
+print("Translate Cohen's f into business units using planned group means and pooled variability.")
+
+# 7. DECISION
+print("\n7. STATISTICAL DECISION")
+if p_value < alpha:
+    print("Reject H0: at least one pricing strategy has a different population mean.")
+    print("Next: run an appropriate multiplicity-adjusted post-hoc comparison.")
+else:
+    print("Fail to reject H0: evidence is insufficient to establish a mean difference.")
+
+print("\nEND OF NINE-TEST PLAYBOOK")
+# ============================================================================
+# ============================================================================
