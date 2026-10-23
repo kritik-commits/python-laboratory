@@ -64,19 +64,19 @@ print("One-sided test: tests for an effect in one specified direction.")
 print("Two-sided test: tests for an effect in either direction.\n")
 
 print("TESTS FOR PROPORTIONS")
-print("One-proportion z-test: tests whether a population proportion differs from a specified value.")
+print("One-proportion z-test: tests whether a population proportion differs from a specified value or the benchmark.")
 print("Two-proportion z-test: tests whether two independent population proportions differ.\n")
 
 print("TESTS FOR NUMERICAL DATA")
-print("One-sample t-test: tests whether a population mean differs from a specified value.")
-print("Independent two-sample t-test: compares the means of two independent groups.")
+print("One-sample t-test: tests whether a population mean differs from a specified value or the benchmark.")
+print("Independent two-sample t-test: compares the means of two independent groups or samples.")
 print("Welch's t-test: compares two independent means without assuming equal population variances.")
-print("Paired t-test: tests the mean difference between matched or repeated measurements.\n")
+print("Paired t-test: tests the mean difference between two dependent groups, such as matched subjects or repeated measurements.")
 
 print("TESTS FOR CATEGORICAL DATA")
-print("Chi-square test of independence: tests whether two categorical variables are associated.")
-print("Chi-square goodness-of-fit test: tests whether observed category counts match expected proportions.")
-print("Fisher's exact test: tests the association between two categorical variables, especially with small sample counts.\n")
+print("Chi-square test of independence: tests whether two categorical variables are associated; generally, expected cell counts >= 5.")
+print("Chi-square goodness-of-fit test: tests whether observed category counts match expected proportions; expected counts >= 5.")
+print("Fisher's exact test: tests the association between two categorical variables; suitable for small samples, often when expected cell counts are below 5.\n")
 
 print("TEST FOR COMPARING MULTIPLE MEANS")
 print("One-way ANOVA: tests whether three or more independent group means differ.\n")
@@ -146,14 +146,15 @@ print(f"Missing values: 0 (aggregate count inputs); invalid counts: 0.")
 
 # 5. TEST, P-VALUE, CONFIDENCE INTERVAL
 print("\n5. TEST CALCULATIONS AND INTERPRETATION")
+print("A one-sided test puts all significance-level probability in one tail. A conventional 95% confidence interval splits its 5% error across both tails.")
 absolute_lift = observed_conversion_rate - benchmark_rate
 relative_lift = absolute_lift / benchmark_rate
 standard_error_under_null = np.sqrt(benchmark_rate * (1 - benchmark_rate) / population)
 z_statistic = absolute_lift / standard_error_under_null
 p_value = norm.sf(z_statistic)  # right-tailed test
-z_critical = norm.ppf(1 - alpha)
+z_critical = norm.ppf(1 - alpha) 
 standard_error_ci = np.sqrt(observed_conversion_rate * (1 - observed_conversion_rate) / population)
-z_ci = norm.ppf(1 - (1 - confidence_level) / 2)
+z_ci = norm.ppf(1 - alpha / 2)
 ci_lower = observed_conversion_rate - z_ci * standard_error_ci
 ci_upper = observed_conversion_rate + z_ci * standard_error_ci
 print(f"Benchmark rate: {benchmark_rate:.2%}")
